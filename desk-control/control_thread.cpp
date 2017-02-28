@@ -43,15 +43,14 @@ ControlThread::ControlThread():
 	}
 	libusb_set_debug(0,LIBUSB_LOG_LEVEL_WARNING);//and let usblib be verbose
 
-    /*
 	m_udev = usb2lin06::openDevice();
 	if(m_udev == NULL )
 	{
  		fprintf(stderr, "Error NO device");
 		throw ControlException("could not USB device");
 	}
+	m_targetHeight = getHeight();
 	initDevice(m_udev);
-	*/
 	unique_lock<mutex> lck(m_cmdMutex);
 	m_newCommand = true;
 	lck.unlock();
@@ -125,12 +124,19 @@ ControlThread::cmd(std::string& cmd_line)
 uint16_t
 ControlThread::getHeight()
 {
-	return 0;
 	statusReport str;
-	getStatusReport(m_udev, str);
+	bool state = getStatusReport(m_udev, str);
+    /*
+	if(!state){
+		cout << "status report error" <<  endl;
+		return -1;
+	}*/
 
 	//m_currentHeight = (
-	return getHeightInCM(str);
+    float height = getHeightInCM(str);
+	cout << "height = " << height << endl;
+	//return getHeightInCM(str);
+	return height;
 }
 
 void
@@ -139,8 +145,6 @@ ControlThread::run()
 	unique_lock<mutex> lck(m_cmdMutex);
 	while(!m_newCommand) m_cmdCondition.wait(lck);
 	lck.unlock();
-	cout << "newCommand = false" << endl;
-	m_newCommand = false;
 	//while(!m_stop){
 	do{
 
@@ -148,27 +152,27 @@ ControlThread::run()
 		*/
 
 
+		cout << "#1" << endl;
 		m_currentHeight = getHeight();
 
+
+		cout << "target height = " << m_targetHeight << " currentHeight = " << m_currentHeight << endl;
 		if(m_targetHeight == m_currentHeight){
 			// stop
 			// TODO: how to stop?
 
 			// wait for new command
-			cout << "#1" << endl;
 			unique_lock<mutex> lck(m_cmdMutex);
-			cout << "#2" << endl;
-			while(!m_newCommand){
-				cout << "waiting condition" << endl;
-				m_cmdCondition.wait(lck);
-			}
+			while(!m_newCommand) m_cmdCondition.wait(lck);
 			lck.unlock();
 		} else if(m_currentHeight < m_targetHeight){
-			//moveUp(m_udev);
 			cout << "move UP" << endl;
+			bool state = moveUp(m_udev);
+			cout << "state = " << state << endl;
 		} else{
-			//moveDown(m_udev);
 			cout << "move DOWN" << endl;
+			bool state = moveDown(m_udev);
+			cout << "state = " << state << endl;
 		}
 
 		if(m_stop){
@@ -178,7 +182,6 @@ ControlThread::run()
 
 		cout << __func__ << "..." << endl;
 
-		cout << "newCommand = false" << endl;
 		m_newCommand = false;
 	} while(!m_stop);
 	cout << __func__ << " done." << endl;
