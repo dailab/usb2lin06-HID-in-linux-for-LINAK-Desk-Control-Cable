@@ -35,6 +35,7 @@ ControlThread::ControlThread():
 	m_udev(nullptr),
 	m_stop(false)
 {
+	unique_lock<mutex> lck(m_cmdMutex);
 	if(libusb_init(0)!=0)
 	{
 		cout << "exiting" << endl;
@@ -51,7 +52,6 @@ ControlThread::ControlThread():
 	}
 	m_targetHeight = getHeight();
 	initDevice(m_udev);
-	unique_lock<mutex> lck(m_cmdMutex);
 	m_newCommand = true;
 	lck.unlock();
 	m_cmdCondition.notify_all();
@@ -86,7 +86,12 @@ ControlThread::cmd(std::string& cmd_line)
 		switch(c){
 			case Command::status:
 				cout << "reading status..." << endl;
-				sr.currentHeight = getHeight();
+				try{
+					sr.currentHeight = getHeight();
+				}catch(ControlException &e){
+					cout << "got Exception: " << e.what() << endl;
+					break;
+				}
 				m_newCommand = true;
 				break;
 			case Command::up:
@@ -101,7 +106,12 @@ ControlThread::cmd(std::string& cmd_line)
 				break;
 			case Command::stop:
 				cout << "stop moving" << endl;
-				m_targetHeight = getHeight();
+				try{
+					m_targetHeight = getHeight();
+				}catch(ControlException &e){
+					cout << "got Exception: " << e.what() << endl;
+					break;
+				}
 				m_newCommand = true;
 				break;
 			case Command::exit:
@@ -122,21 +132,44 @@ ControlThread::cmd(std::string& cmd_line)
 }
 
 uint16_t
-ControlThread::getHeight()
+ControlThread::getHeight() throw(ControlException)
 {
 	statusReport str;
+	unique_lock<mutex> lck(m_busMutex);
 	bool state = getStatusReport(m_udev, str);
-    /*
+	lck.unlock();
 	if(!state){
-		cout << "status report error" <<  endl;
-		return -1;
-	}*/
+		throw ControlException("status report problem");
+	}
 
 	//m_currentHeight = (
     float height = getHeightInCM(str);
 	cout << "height = " << height << endl;
 	//return getHeightInCM(str);
 	return height;
+}
+
+uint16_t
+ControlThread::move(Command cmd)
+{
+	uint16_t value = 0;
+	unique_lock<mutex> lck(m_busMutex);
+
+	switch(cmd){
+		case Command::up:
+			value = moveUp(m_udev);
+			break;
+        case Command::down:
+			value = moveDown(m_udev);
+			break;
+		default:
+			break;
+	}
+
+    usleep(100);
+	lck.unlock();
+	return value;
+
 }
 
 void
@@ -167,11 +200,13 @@ ControlThread::run()
 			lck.unlock();
 		} else if(m_currentHeight < m_targetHeight){
 			cout << "move UP" << endl;
-			bool state = moveUp(m_udev);
+			//bool state = moveUp(m_udev);
+			bool state = move(Command::up);
 			cout << "state = " << state << endl;
 		} else{
 			cout << "move DOWN" << endl;
-			bool state = moveDown(m_udev);
+			//bool state = moveDown(m_udev);
+			bool state = move(Command::down);
 			cout << "state = " << state << endl;
 		}
 

@@ -27,6 +27,7 @@ void printLibStrErr(int errID)
 {
   switch(errID)
   {
+    case LIBUSB_ERROR_IO: fprintf(stderr,"IO Problem"); break;
     case LIBUSB_ERROR_TIMEOUT: fprintf(stderr,"ERROR the transfer timed out (and populates transferred)"); break;
     case LIBUSB_ERROR_PIPE:    fprintf(stderr,"the endpoint halted"); break;
     case LIBUSB_ERROR_OVERFLOW: fprintf(stderr,"the device offered more data, see Packets and overflows"); break;

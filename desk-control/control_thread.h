@@ -58,11 +58,13 @@ public:
 	bool stopped() { return m_stop; }
 
 protected:
-	uint16_t getHeight();
+	uint16_t getHeight() throw(ControlException);
+	uint16_t move(Command cmd);
 	void run();
 
 	std::thread m_thread;
 	std::mutex m_cmdMutex;
+	std::mutex m_busMutex;
 	std::condition_variable m_cmdCondition;
 	libusb_device_handle* m_udev;
 	bool m_newCommand;

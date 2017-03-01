@@ -36,6 +36,11 @@ int main(int argc, char** argv){
 	}
 
 	ControlThread ct;
+	if(ct.stopped()){
+		cout << "stopped" << endl;
+	}else{
+		cout << "not stopped" << endl;
+	}
 
 	while(!ct.stopped()){
 		//fstream fifo(FIFO_NAME);
