@@ -7,7 +7,6 @@ CXXFLAGS=-std=c++14
 CXXFLAGS+=-g -O0
 
 LDLIBS+=\
-	-lboost_thread \
 	-lpthread \
 	-lstdc++ \
 	-lusb-1.0 \
@@ -18,4 +17,4 @@ desk-control: desk-control.o $(OBJS)
 
 .phony: clean
 clean:
-	rm -r $(TARGET) *.o
+	rm -f $(TARGET) *.o
