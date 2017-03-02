@@ -68,6 +68,7 @@ protected:
 	std::condition_variable m_cmdCondition;
 	libusb_device_handle* m_udev;
 	bool m_newCommand;
+	Command m_oldCommand;
 	//Command m_cmd;
 	bool m_stop;
 	uint16_t m_targetHeight;
