@@ -60,13 +60,9 @@ ControlThread::ControlThread():
 	m_thread(&ControlThread::run, this),
 #ifndef EMULATE_DESK
 	m_udev(nullptr),
-<<<<<<< HEAD
 #endif
-	m_stop(false)
-=======
 	m_stop(false),
 	m_oldCommand(Command::stop)
->>>>>>> 5dc115419851d121e6dff333539cb22ba1f696ad
 {
 	unique_lock<mutex> lck(m_cmdMutex);
 #ifndef EMULATE_DESK
