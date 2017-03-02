@@ -1,6 +1,8 @@
 #ifndef _CONTROL_THREAD_H
 #define _CONTROL_THREAD_H
 
+#define EMULATE_DESK 0
+
 //#include <boost/thread.hpp>
 #include <thread>
 #include <mutex>
@@ -32,6 +34,8 @@ public:
 		up,
 		down,
 		stop,
+		plus,
+		minus,
 		exit,
 	};
 
@@ -61,20 +65,24 @@ protected:
 	uint16_t getHeight() throw(ControlException);
 	uint16_t move(Command cmd);
 	void run();
+	uint parseNumbers(std::istream& is);
 
 	std::thread m_thread;
 	std::mutex m_cmdMutex;
 	std::mutex m_busMutex;
 	std::condition_variable m_cmdCondition;
+#ifndef EMULATE_DESK
 	libusb_device_handle* m_udev;
+#endif
 	bool m_newCommand;
 	//Command m_cmd;
 	bool m_stop;
-	uint16_t m_targetHeight;
-	uint16_t m_currentHeight;
+	int m_targetHeight;
+	int m_currentHeight;
 	Operation m_operationState;
 
 	const static std::map<std::string, Command> s_commandStr;
+	const static std::map<std::string, uint> s_numbers;
 };
 
 /*

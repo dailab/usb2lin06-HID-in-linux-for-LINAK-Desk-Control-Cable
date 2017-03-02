@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 
 #include <sys/types.h>
 #include <signal.h>
@@ -19,23 +20,51 @@ using namespace usb2lin06;
 const map<string, ControlThread::Command>
 ControlThread::s_commandStr = {
 	{"status", Command::status},
-	{"STATUS", Command::status},
 	{"up", Command::up},
-	{"UP", Command::up},
 	{"down", Command::down},
-	{"DOWN", Command::down},
 	{"stop", Command::stop},
-	{"STOP", Command::stop},
 	{"exit", Command::exit},
-	{"EXIT", Command::exit},
+	{"plus", Command::plus},
+	{"minus", Command::minus},
+};
+
+const map<string, uint>
+ControlThread::s_numbers = {
+	{"zero", 0},
+	{"one", 1},
+	{"two", 2},
+	{"three", 3},
+	{"four", 4},
+	{"five", 5},
+	{"six", 6},
+	{"seven", 7},
+	{"eight", 8},
+	{"nine", 9},
+	{"ten", 10},
+	{"eleven", 11},
+	{"twelve", 12},
+	{"thirteen", 13},
+	{"fourteen", 14},
+	{"fifteen", 15},
+	{"sixteen", 16},
+	{"seventeen", 17},
+	{"eighteen", 18},
+	{"nineteen", 19},
+	{"twenty", 20},
+	{"thirty", 30},
+	{"fourty", 40},
+	{"fifty", 50},
 };
 
 ControlThread::ControlThread():
 	m_thread(&ControlThread::run, this),
+#ifndef EMULATE_DESK
 	m_udev(nullptr),
+#endif
 	m_stop(false)
 {
 	unique_lock<mutex> lck(m_cmdMutex);
+#ifndef EMULATE_DESK
 	if(libusb_init(0)!=0)
 	{
 		cout << "exiting" << endl;
@@ -50,8 +79,9 @@ ControlThread::ControlThread():
  		fprintf(stderr, "Error NO device");
 		throw ControlException("could not USB device");
 	}
-	m_targetHeight = getHeight();
 	initDevice(m_udev);
+#endif
+	m_targetHeight = getHeight();
 	m_newCommand = true;
 	lck.unlock();
 	m_cmdCondition.notify_all();
@@ -59,8 +89,10 @@ ControlThread::ControlThread():
 
 ControlThread::~ControlThread()
 {
+#ifndef EMULATE_DESK
 	libusb_close(m_udev);
 	libusb_exit(0);
+#endif
 }
 
 ControlThread::StatusRecord 
@@ -70,6 +102,8 @@ ControlThread::cmd(std::string& cmd_line)
 
 	sr.currentHeight = m_currentHeight;
 	sr.operationState = m_operationState;
+	
+	std::transform(cmd_line.begin(), cmd_line.end(), cmd_line.begin(), ::tolower);
 
 	cout << __func__ << ": " << cmd_line << endl;
 	string cmd;
@@ -81,6 +115,8 @@ ControlThread::cmd(std::string& cmd_line)
 		Command c = s_commandStr.at(cmd);
 
 		cout << "command=" << cmd << " (" << (int)c << ")" << endl;
+
+		uint delta = 0;
 
 		unique_lock<mutex> lck(m_cmdMutex);
 		switch(c){
@@ -114,6 +150,24 @@ ControlThread::cmd(std::string& cmd_line)
 				}
 				m_newCommand = true;
 				break;
+			case Command::plus:
+				delta = parseNumbers(is);
+				cout << "plus " << delta << " ..." << endl;
+				m_targetHeight = m_currentHeight + delta;
+				if(m_targetHeight > MAX_HEIGHT){
+					m_targetHeight = MAX_HEIGHT;
+				}
+				m_newCommand = true;
+				break;
+			case Command::minus:
+				delta = parseNumbers(is);
+				cout << "minus " << delta << " ..." << endl;
+				m_targetHeight = m_currentHeight - delta;
+				if(m_targetHeight < MIN_HEIGHT){
+					m_targetHeight = MIN_HEIGHT;
+				}
+				m_newCommand = true;
+				break;
 			case Command::exit:
 				cout << "exit..." << endl;
 				m_newCommand = true;
@@ -131,9 +185,32 @@ ControlThread::cmd(std::string& cmd_line)
 	return sr;
 }
 
+uint 
+ControlThread::parseNumbers(istream& is)
+{
+	uint rv(0);
+	string term;
+
+	do{
+		getline(is, term, ' ');
+		cout << __func__ << ": term=" << term << endl;
+
+		try{
+			uint term_num = s_numbers.at(term);
+			cout << __func__ << "  -> " << term_num << endl;
+			rv += term_num;
+		} catch(out_of_range& e){
+			// ...
+		}
+	} while(!term.empty() && is.good());
+
+	return rv;
+}
+
 uint16_t
 ControlThread::getHeight() throw(ControlException)
 {
+#ifndef EMULATE_DESK
 	statusReport str;
 	unique_lock<mutex> lck(m_busMutex);
 	bool state = getStatusReport(m_udev, str);
@@ -147,6 +224,9 @@ ControlThread::getHeight() throw(ControlException)
 	cout << "height = " << height << endl;
 	//return getHeightInCM(str);
 	return height;
+#else
+	return 0;
+#endif
 }
 
 uint16_t
@@ -155,6 +235,7 @@ ControlThread::move(Command cmd)
 	uint16_t value = 0;
 	unique_lock<mutex> lck(m_busMutex);
 
+#ifndef EMULATE_DESK
 	switch(cmd){
 		case Command::up:
 			value = moveUp(m_udev);
@@ -165,8 +246,9 @@ ControlThread::move(Command cmd)
 		default:
 			break;
 	}
+#endif
 
-    usleep(100);
+	usleep(100);
 	lck.unlock();
 	return value;
 
