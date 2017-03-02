@@ -75,6 +75,7 @@ protected:
 	libusb_device_handle* m_udev;
 #endif
 	bool m_newCommand;
+	Command m_oldCommand;
 	//Command m_cmd;
 	bool m_stop;
 	int m_targetHeight;
