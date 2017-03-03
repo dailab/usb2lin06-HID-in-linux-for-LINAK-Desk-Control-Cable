@@ -1,7 +1,7 @@
 #ifndef _CONTROL_THREAD_H
 #define _CONTROL_THREAD_H
 
-#define EMULATE_DESK 0
+//#define EMULATE_DESK 1
 
 //#include <boost/thread.hpp>
 #include <thread>
