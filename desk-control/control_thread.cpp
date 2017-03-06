@@ -132,7 +132,7 @@ ControlThread::cmd(std::string& cmd_line)
 				m_newCommand = true;
 				break;
 			case Command::up:
-				if(m_oldCommand == Command::down){
+				if(m_oldCommand == Command::down || m_oldCommand == Command::minus){
 					m_targetHeight = getHeight();
 					sleep(1);
 				}
@@ -141,7 +141,7 @@ ControlThread::cmd(std::string& cmd_line)
 				m_newCommand = true;
 				break;
 			case Command::down:
-				if(m_oldCommand == Command::up){
+				if(m_oldCommand == Command::up || m_oldCommand == Command::plus){
 					m_targetHeight = getHeight();
 					sleep(1);
 				}
@@ -160,6 +160,10 @@ ControlThread::cmd(std::string& cmd_line)
 				m_newCommand = true;
 				break;
 			case Command::plus:
+				if(m_oldCommand == Command::down || m_oldCommand == Command::minus){
+					m_targetHeight = getHeight();
+					sleep(1);
+				}
 				delta = parseNumbers(is);
 				cout << "plus " << delta << " ..." << endl;
 				m_targetHeight = m_currentHeight + delta;
@@ -169,6 +173,10 @@ ControlThread::cmd(std::string& cmd_line)
 				m_newCommand = true;
 				break;
 			case Command::minus:
+				if(m_oldCommand == Command::up || m_oldCommand == Command::plus){
+					m_targetHeight = getHeight();
+					sleep(1);
+				}
 				delta = parseNumbers(is);
 				cout << "minus " << delta << " ..." << endl;
 				m_targetHeight = m_currentHeight - delta;
