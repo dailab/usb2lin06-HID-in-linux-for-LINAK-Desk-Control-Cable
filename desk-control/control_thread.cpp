@@ -56,14 +56,16 @@ ControlThread::s_numbers = {
 	{"fifty", 50},
 };
 
-ControlThread::ControlThread():
+ControlThread::ControlThread(std::string keyword):
 	m_thread(&ControlThread::run, this),
+	m_keyword(keyword),
 #ifndef EMULATE_DESK
 	m_udev(nullptr),
 #endif
 	m_stop(false),
 	m_oldCommand(Command::stop)
 {
+	std::transform(m_keyword.begin(), m_keyword.end(), m_keyword.begin(), ::tolower);
 	unique_lock<mutex> lck(m_cmdMutex);
 #ifndef EMULATE_DESK
 	if(libusb_init(0)!=0)
@@ -107,9 +109,20 @@ ControlThread::cmd(std::string& cmd_line)
 	std::transform(cmd_line.begin(), cmd_line.end(), cmd_line.begin(), ::tolower);
 
 	cout << __func__ << ": " << cmd_line << endl;
-	string cmd;
 
 	istringstream is(cmd_line);
+
+	if(!m_keyword.empty()){
+		string kw;
+		getline(is, kw, ' ');
+
+		if(kw != m_keyword){
+			cout << __func__ << ": keyword \"" << kw << "\" did not match!" << endl;
+			return sr;
+		}
+	}
+
+	string cmd;
 	getline(is, cmd, ' ');
 
 	try{

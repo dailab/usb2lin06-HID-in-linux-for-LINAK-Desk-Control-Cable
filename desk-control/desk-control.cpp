@@ -25,6 +25,12 @@ int main(int argc, char** argv){
 	int res;
 	int fifo_fd;
 
+	string keyword;
+
+	if(argc > 1){
+		keyword = argv[1];
+	}
+
 	res = mkfifo(FIFO_NAME, 0666);
 	if(res != 0){
 		if(errno == EEXIST){
@@ -35,7 +41,7 @@ int main(int argc, char** argv){
 		}
 	}
 
-	ControlThread ct;
+	ControlThread ct(keyword);
 
 	while(!ct.stopped()){
 		//fstream fifo(FIFO_NAME);

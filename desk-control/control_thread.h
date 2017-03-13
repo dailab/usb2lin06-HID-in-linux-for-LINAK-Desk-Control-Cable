@@ -1,7 +1,7 @@
 #ifndef _CONTROL_THREAD_H
 #define _CONTROL_THREAD_H
 
-//#define EMULATE_DESK 1
+#define EMULATE_DESK 1
 
 //#include <boost/thread.hpp>
 #include <thread>
@@ -51,7 +51,7 @@ public:
 		Operation operationState;
 	};
 
-	ControlThread();
+	ControlThread(std::string keyword = "");
 	~ControlThread();
 
 	StatusRecord cmd(std::string& cmd_line);
@@ -67,6 +67,7 @@ protected:
 	void run();
 	uint parseNumbers(std::istream& is);
 
+	std::string m_keyword;
 	std::thread m_thread;
 	std::mutex m_cmdMutex;
 	std::mutex m_busMutex;
