@@ -25,7 +25,9 @@ ControlThread::s_commandStr = {
 	{"stop", Command::stop},
 	{"exit", Command::exit},
 	{"plus", Command::plus},
+	{"+", Command::plus},
 	{"minus", Command::minus},
+	{"-", Command::minus},
 };
 
 const map<string, uint>
@@ -228,11 +230,16 @@ ControlThread::parseNumbers(istream& is)
 		cout << __func__ << ": term=" << term << endl;
 
 		try{
-			uint term_num = s_numbers.at(term);
-			cout << __func__ << "  -> " << term_num << endl;
+			uint term_num = std::stoul(term);
 			rv += term_num;
-		} catch(out_of_range& e){
-			// ...
+		} catch(...){
+			try{
+				uint term_num = s_numbers.at(term);
+				cout << __func__ << "  -> " << term_num << endl;
+				rv += term_num;
+			} catch(out_of_range& e){
+				// ...
+			}
 		}
 	} while(!term.empty() && is.good());
 
