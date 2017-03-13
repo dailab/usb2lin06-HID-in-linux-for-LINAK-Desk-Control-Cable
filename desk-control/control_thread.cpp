@@ -230,15 +230,15 @@ ControlThread::parseNumbers(istream& is)
 		cout << __func__ << ": term=" << term << endl;
 
 		try{
-			uint term_num = std::stoul(term);
+			uint term_num = s_numbers.at(term);
+			cout << __func__ << "  -> " << term_num << endl;
 			rv += term_num;
-		} catch(...){
+		} catch(out_of_range& e){
 			try{
-				uint term_num = s_numbers.at(term);
-				cout << __func__ << "  -> " << term_num << endl;
+				uint term_num = std::stoul(term);
 				rv += term_num;
-			} catch(out_of_range& e){
-				// ...
+			} catch(...){
+				cout << "could not parse \"" << term << "\" as a number" << endl;
 			}
 		}
 	} while(!term.empty() && is.good());
