@@ -18,6 +18,7 @@ install: $(TARGET)
 	install -d $(DESTDIR)
 	install -d $(DESTDIR)/usr/bin
 	install desk-control $(DESTDIR)/usr/bin
+	install desk-control-speech.sh $(DESTDIR)/usr/bin
 	install -d $(DESTDIR)/usr/share/desk-control
 	install conf/* $(DESTDIR)/usr/share/desk-control/
 	install -d $(DESTDIR)/etc/systemd/system/multi-user.target.wants
