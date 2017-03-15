@@ -322,8 +322,10 @@ ControlThread::run()
 			lck.unlock();
 		} else if(m_currentHeight < m_targetHeight){
 			bool state = move(Command::up);
+			usleep(10000);
 		} else{
 			bool state = move(Command::down);
+			usleep(10000);
 		}
 
 		if(m_stop){
