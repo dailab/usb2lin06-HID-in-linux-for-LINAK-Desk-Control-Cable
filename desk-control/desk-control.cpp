@@ -1,6 +1,6 @@
 
-#define FIFO_NAME "/tmp/desk-control"
-//#define FIFO_NAME "/var/run/desk-control"
+//#define FIFO_NAME "/tmp/desk-control"
+#define FIFO_NAME "/var/run/desk-control"
 
 #include <sys/types.h>
 #include <sys/stat.h>

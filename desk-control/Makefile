@@ -13,6 +13,16 @@ LDLIBS+=\
 
 all: $(TARGET)
 
+install: $(TARGET)
+	echo "installing into $(DESTDIR)..."
+	install -d $(DESTDIR)
+	install -d $(DESTDIR)/usr/bin
+	install desk-control $(DESTDIR)/usr/bin
+	install -d $(DESTDIR)/usr/share/desk-control
+	install conf/* $(DESTDIR)/usr/share/desk-control/
+	install -d $(DESTDIR)/etc/systemd/system/multi-user.target.wants
+	install systemd/* $(DESTDIR)/etc/systemd/system/multi-user.target.wants
+
 desk-control: desk-control.o $(OBJS)
 
 .phony: clean

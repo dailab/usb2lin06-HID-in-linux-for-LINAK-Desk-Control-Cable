@@ -1,0 +1,12 @@
+[Unit]
+Description=Desk-Control
+#Requires=
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/desk-control
+StandardOutput=null
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
