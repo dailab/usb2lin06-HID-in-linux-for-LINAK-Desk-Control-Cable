@@ -1,7 +1,7 @@
 #ifndef _CONTROL_THREAD_H
 #define _CONTROL_THREAD_H
 
-#define ENABLE_DEBUG 1
+//#define ENABLE_DEBUG 1
 //#define EMULATE_DESK 1
 
 //#include <boost/thread.hpp>
@@ -38,7 +38,9 @@ public:
     typedef CoutType& (*StandardEndLine)(CoutType&);
     Logger& operator<<(StandardEndLine manip)
     {
+#if ENABLE_DEBUG
         manip(std::cout);
+#endif
         return *this;
     }
 
