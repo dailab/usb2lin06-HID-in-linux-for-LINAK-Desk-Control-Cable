@@ -1,6 +1,5 @@
 #include "control_thread.h"
 
-#include <iostream>
 #include <sstream>
 #include <algorithm>
 
@@ -58,6 +57,7 @@ ControlThread::s_numbers = {
 	{"fifty", 50},
 };
 
+
 ControlThread::ControlThread(std::string keyword):
 	m_thread(&ControlThread::run, this),
 	m_keyword(keyword),
@@ -65,14 +65,15 @@ ControlThread::ControlThread(std::string keyword):
 	m_udev(nullptr),
 #endif
 	m_stop(false),
-	m_oldCommand(Command::stop)
+	m_oldCommand(Command::stop),
+	m_logger()
 {
 	std::transform(m_keyword.begin(), m_keyword.end(), m_keyword.begin(), ::tolower);
 	unique_lock<mutex> lck(m_cmdMutex);
 #ifndef EMULATE_DESK
 	if(libusb_init(0)!=0)
 	{
-		cout << "exiting" << endl;
+        m_logger << "Exiting";
 		fprintf(stderr, "Error failed to init libusb");
 		throw ControlException("could not initialize libusb");
 	}
@@ -110,7 +111,7 @@ ControlThread::cmd(std::string& cmd_line)
 	
 	std::transform(cmd_line.begin(), cmd_line.end(), cmd_line.begin(), ::tolower);
 
-	cout << __func__ << ": " << cmd_line << endl;
+	m_logger << __func__ << ": " << cmd_line;
 
 	istringstream is(cmd_line);
 
@@ -119,7 +120,7 @@ ControlThread::cmd(std::string& cmd_line)
 		getline(is, kw, ' ');
 
 		if(kw != m_keyword){
-			cout << __func__ << ": keyword \"" << kw << "\" did not match!" << endl;
+			m_logger << __func__ << ": keyword \"" << kw << "\" did not match!";
 			return sr;
 		}
 	}

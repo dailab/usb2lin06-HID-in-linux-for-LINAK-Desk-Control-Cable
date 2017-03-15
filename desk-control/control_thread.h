@@ -1,16 +1,31 @@
 #ifndef _CONTROL_THREAD_H
 #define _CONTROL_THREAD_H
 
+#define ENABLE_DEBUG 1
 //#define EMULATE_DESK 1
 
 //#include <boost/thread.hpp>
 #include <thread>
+#include <iostream>
 #include <mutex>
 #include <condition_variable>
 #include <map>
 #include <exception>
 
 #include <libusb-1.0/libusb.h>
+
+
+class Logger {
+public:
+	template <typename T>
+	Logger& operator <<(T const& value) {
+#if ENABLE_DEBUG
+        std::cout << value << std::endl;; // also print the level etc.
+#endif
+        return *this;
+    }
+};
+
 
 class ControlException: public std::exception{
 public:
@@ -82,6 +97,7 @@ protected:
 	int m_targetHeight;
 	int m_currentHeight;
 	Operation m_operationState;
+	Logger m_logger;
 
 	const static std::map<std::string, Command> s_commandStr;
 	const static std::map<std::string, uint> s_numbers;
