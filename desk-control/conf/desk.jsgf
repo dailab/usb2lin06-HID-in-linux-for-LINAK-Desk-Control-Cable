@@ -1,0 +1,69 @@
+#JSGF V1.0;
+
+grammar sample;
+
+public <basicCmd> = DESK ((<plus_minus> <number>) | <up_down> | <stop>) ;
+<plus_minus> = PLUS|MINUS;
+<up_down> = UP|DOWN;
+<stop> = STOP;
+<number> = ([<twens_plus>] <digit>) | <tens>;
+
+<digit> = ( 
+		ONE
+	|	TWO
+	| THREE
+	| FOUR
+	| FIVE
+	| SIX
+	| SEVEN
+	| EIGHT
+	| NINE
+);
+
+<tens> = (
+	TEN		
+	| ELEVEN	
+	| TWELVE	
+	| THIRTEEN 
+	| FOURTEEN 
+	| FIFTEEN  
+	| SIXTEEN  
+	| SEVENTEEN
+	| EIGHTEEN 
+	| NINETEEN 
+);
+
+<twens_plus> = (
+		TWENTY
+	| THIRTY
+	| FOURTY
+	| FIFTY
+);
+
+
+<number_old> = ( ONE
+         | TWO
+	 | THREE
+	 | FOUR
+	 | FIVE
+	 | SIX
+	 | SEVEN
+	 | EIGHT
+	 | NINE
+	 | TEN		
+	 | ELEVEN	
+	 | TWELVE	
+	 | THIRTEEN 
+	 | FOURTEEN 
+	 | FIFTEEN  
+	 | SIXTEEN  
+	 | SEVENTEEN
+	 | EIGHTEEN 
+	 | NINETEEN 
+	 | TWENTY
+         | THIRTY
+         | FOURTY
+         | FIFTY
+	) [ <number> ];
+ 
+
