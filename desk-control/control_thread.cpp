@@ -131,14 +131,14 @@ ControlThread::cmd(std::string& cmd_line)
 	try{
 		Command c = s_commandStr.at(cmd);
 
-		cout << "command=" << cmd << " (" << (int)c << ")" << endl;
+		m_logger << "command=" << cmd << " (" << (int)c << ")";
 
 		uint delta = 0;
 
 		unique_lock<mutex> lck(m_cmdMutex);
 		switch(c){
 			case Command::status:
-				cout << "reading status..." << endl;
+				m_logger << "reading status...";
 				try{
 					sr.currentHeight = getHeight();
 				}catch(ControlException &e){
@@ -152,7 +152,7 @@ ControlThread::cmd(std::string& cmd_line)
 					m_targetHeight = getHeight();
 					sleep(1);
 				}
-				cout << "moving up..." << endl;
+				m_logger << "moving up...";
 				m_targetHeight = MAX_HEIGHT;
 				m_newCommand = true;
 				break;
@@ -161,12 +161,12 @@ ControlThread::cmd(std::string& cmd_line)
 					m_targetHeight = getHeight();
 					sleep(1);
 				}
-				cout << "moving down..." << endl;
+				m_logger << "moving down...";
 				m_targetHeight = MIN_HEIGHT;
 				m_newCommand = true;
 				break;
 			case Command::stop:
-				cout << "stop moving" << endl;
+				m_logger << "stop moving";
 				try{
 					m_targetHeight = getHeight();
 				}catch(ControlException &e){
@@ -181,7 +181,7 @@ ControlThread::cmd(std::string& cmd_line)
 					sleep(1);
 				}
 				delta = parseNumbers(is);
-				cout << "plus " << delta << " ..." << endl;
+				m_logger << "plus " << delta << " ...";
 				m_targetHeight = m_currentHeight + delta;
 				if(m_targetHeight > MAX_HEIGHT){
 					m_targetHeight = MAX_HEIGHT;
@@ -194,7 +194,7 @@ ControlThread::cmd(std::string& cmd_line)
 					sleep(1);
 				}
 				delta = parseNumbers(is);
-				cout << "minus " << delta << " ..." << endl;
+				m_logger << "minus " << delta << " ...";
 				m_targetHeight = m_currentHeight - delta;
 				if(m_targetHeight < MIN_HEIGHT){
 					m_targetHeight = MIN_HEIGHT;
@@ -202,7 +202,7 @@ ControlThread::cmd(std::string& cmd_line)
 				m_newCommand = true;
 				break;
 			case Command::exit:
-				cout << "exit..." << endl;
+				m_logger << "exit...";
 				m_newCommand = true;
 				m_stop = true;
 				break;
@@ -228,7 +228,7 @@ ControlThread::parseNumbers(istream& is)
 
 	do{
 		getline(is, term, ' ');
-		cout << __func__ << ": term=" << term << endl;
+		m_logger << __func__ << ": term=" << term;
 
 		try{
 			uint term_num = s_numbers.at(term);
@@ -338,7 +338,7 @@ ControlThread::run()
 
 		m_newCommand = false;
 	} while(!m_stop);
-	cout << __func__ << " done." << endl;
+	m_logger << __func__ << " done.";
 
 	kill(getpid(), SIGUSR1);
 }
