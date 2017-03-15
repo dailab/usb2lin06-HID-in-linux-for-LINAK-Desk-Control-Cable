@@ -12,6 +12,7 @@
 
 #define MIN_HEIGHT 0
 #define MAX_HEIGHT 52
+#define STOP_DELAY 2
 
 using namespace std;
 using namespace usb2lin06;
@@ -182,7 +183,8 @@ ControlThread::cmd(std::string& cmd_line)
 				}
 				delta = parseNumbers(is);
 				m_logger << "plus " << delta << " ...";
-				m_targetHeight = m_currentHeight + delta;
+				m_currentHeight = getHeight();
+				m_targetHeight = m_currentHeight + delta - STOP_DELAY;
 				if(m_targetHeight > MAX_HEIGHT){
 					m_targetHeight = MAX_HEIGHT;
 				}
@@ -195,7 +197,8 @@ ControlThread::cmd(std::string& cmd_line)
 				}
 				delta = parseNumbers(is);
 				m_logger << "minus " << delta << " ...";
-				m_targetHeight = m_currentHeight - delta;
+				m_currentHeight = getHeight();
+				m_targetHeight = m_currentHeight - delta + STOP_DELAY;
 				if(m_targetHeight < MIN_HEIGHT){
 					m_targetHeight = MIN_HEIGHT;
 				}
@@ -232,7 +235,7 @@ ControlThread::parseNumbers(istream& is)
 
 		try{
 			uint term_num = s_numbers.at(term);
-			cout << __func__ << "  -> " << term_num << endl;
+			m_logger << __func__ << "  -> " << term_num;
 			rv += term_num;
 		} catch(out_of_range& e){
 			try{
