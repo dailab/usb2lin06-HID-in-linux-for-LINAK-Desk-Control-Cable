@@ -74,7 +74,7 @@ ControlThread::ControlThread(std::string keyword):
 #ifndef EMULATE_DESK
 	if(libusb_init(0)!=0)
 	{
-        m_logger << "Exiting";
+        m_logger << "Exiting" << endl;
 		fprintf(stderr, "Error failed to init libusb");
 		throw ControlException("could not initialize libusb");
 	}
@@ -112,7 +112,7 @@ ControlThread::cmd(std::string& cmd_line)
 	
 	std::transform(cmd_line.begin(), cmd_line.end(), cmd_line.begin(), ::tolower);
 
-	m_logger << __func__ << ": " << cmd_line;
+	m_logger << __func__ << ": " << cmd_line << endl;
 
 	istringstream is(cmd_line);
 
@@ -121,7 +121,7 @@ ControlThread::cmd(std::string& cmd_line)
 		getline(is, kw, ' ');
 
 		if(kw != m_keyword){
-			m_logger << __func__ << ": keyword \"" << kw << "\" did not match!";
+			m_logger << __func__ << ": keyword \"" << kw << "\" did not match!" << endl;
 			return sr;
 		}
 	}
@@ -132,14 +132,17 @@ ControlThread::cmd(std::string& cmd_line)
 	try{
 		Command c = s_commandStr.at(cmd);
 
-		m_logger << "command=" << cmd << " (" << (int)c << ")";
+		m_logger << "command=" << cmd << " (" << (int)c << ")" << endl;
 
 		uint delta = 0;
 
 		unique_lock<mutex> lck(m_cmdMutex);
+		m_targetHeight = getHeight();
+		m_currentHeight = m_targetHeight;
+		m_logger << "CurrentHeight= " << m_currentHeight << " TargetHeight= " << m_targetHeight << endl;
 		switch(c){
 			case Command::status:
-				m_logger << "reading status...";
+				m_logger << "reading status..." << endl;
 				try{
 					sr.currentHeight = getHeight();
 				}catch(ControlException &e){
@@ -150,24 +153,22 @@ ControlThread::cmd(std::string& cmd_line)
 				break;
 			case Command::up:
 				if(m_oldCommand == Command::down || m_oldCommand == Command::minus){
-					m_targetHeight = getHeight();
 					sleep(1);
 				}
-				m_logger << "moving up...";
+				m_logger << "moving up..." << endl;
 				m_targetHeight = MAX_HEIGHT;
 				m_newCommand = true;
 				break;
 			case Command::down:
 				if(m_oldCommand == Command::up || m_oldCommand == Command::plus){
-					m_targetHeight = getHeight();
 					sleep(1);
 				}
-				m_logger << "moving down...";
+				m_logger << "moving down..." << endl;
 				m_targetHeight = MIN_HEIGHT;
 				m_newCommand = true;
 				break;
 			case Command::stop:
-				m_logger << "stop moving";
+				m_logger << "stop moving" << endl;
 				try{
 					m_targetHeight = getHeight();
 				}catch(ControlException &e){
@@ -178,13 +179,12 @@ ControlThread::cmd(std::string& cmd_line)
 				break;
 			case Command::plus:
 				if(m_oldCommand == Command::down || m_oldCommand == Command::minus){
-					m_targetHeight = getHeight();
 					sleep(1);
 				}
 				delta = parseNumbers(is);
-				m_logger << "plus " << delta << " ...";
+				m_logger << "plus " << delta << " ..." << endl;
 				m_currentHeight = getHeight();
-				m_targetHeight = m_currentHeight + delta - STOP_DELAY;
+				m_targetHeight = m_currentHeight + delta;
 				if(m_targetHeight > MAX_HEIGHT){
 					m_targetHeight = MAX_HEIGHT;
 				}
@@ -192,24 +192,24 @@ ControlThread::cmd(std::string& cmd_line)
 				break;
 			case Command::minus:
 				if(m_oldCommand == Command::up || m_oldCommand == Command::plus){
-					m_targetHeight = getHeight();
 					sleep(1);
 				}
 				delta = parseNumbers(is);
-				m_logger << "minus " << delta << " ...";
+				m_logger << "minus " << delta << " ..." << endl;
 				m_currentHeight = getHeight();
-				m_targetHeight = m_currentHeight - delta + STOP_DELAY;
+				m_targetHeight = m_currentHeight - delta;
 				if(m_targetHeight < MIN_HEIGHT){
 					m_targetHeight = MIN_HEIGHT;
 				}
 				m_newCommand = true;
 				break;
 			case Command::exit:
-				m_logger << "exit...";
+				m_logger << "exit..." << endl;
 				m_newCommand = true;
 				m_stop = true;
 				break;
 		}
+		m_logger << "CurrentHeight= " << m_currentHeight << " TargetHeight= " << m_targetHeight << endl;
 
 		m_oldCommand = c;
 
@@ -231,11 +231,11 @@ ControlThread::parseNumbers(istream& is)
 
 	do{
 		getline(is, term, ' ');
-		m_logger << __func__ << ": term=" << term;
+		m_logger << __func__ << ": term=" << term << endl;
 
 		try{
 			uint term_num = s_numbers.at(term);
-			m_logger << __func__ << "  -> " << term_num;
+			m_logger << __func__ << "  -> " << term_num << endl;
 			rv += term_num;
 		} catch(out_of_range& e){
 			try{
@@ -313,10 +313,11 @@ ControlThread::run()
 
 
 		m_currentHeight = getHeight();
+		m_logger << "currentHeight=" << m_currentHeight << endl;
 
 
 		//cout << "target height = " << m_targetHeight << " currentHeight = " << m_currentHeight << endl;
-		if(m_targetHeight == m_currentHeight){
+		if(m_targetHeight >= (m_currentHeight-STOP_DELAY) && m_targetHeight <=(m_currentHeight+STOP_DELAY)){
 			// stop
 			// TODO: how to stop?
 
@@ -341,7 +342,7 @@ ControlThread::run()
 
 		m_newCommand = false;
 	} while(!m_stop);
-	m_logger << __func__ << " done.";
+	m_logger << __func__ << " done." << endl;
 
 	kill(getpid(), SIGUSR1);
 }

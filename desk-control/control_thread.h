@@ -20,10 +20,28 @@ public:
 	template <typename T>
 	Logger& operator <<(T const& value) {
 #if ENABLE_DEBUG
-        std::cout << value << std::endl;; // also print the level etc.
+        std::cout << value; // also print the level etc.
 #endif
         return *this;
     }
+	
+	static Logger& endl(Logger& stream)
+    {
+        // print a new line
+#if ENABLE_DEBUG
+        std::cout << std::endl;
+#endif
+        return stream;
+    }
+
+	typedef std::basic_ostream<char, std::char_traits<char> > CoutType;
+    typedef CoutType& (*StandardEndLine)(CoutType&);
+    Logger& operator<<(StandardEndLine manip)
+    {
+        manip(std::cout);
+        return *this;
+    }
+
 };
 
 
