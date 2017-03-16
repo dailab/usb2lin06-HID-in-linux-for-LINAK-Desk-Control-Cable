@@ -15,7 +15,6 @@ all: $(TARGET)
 
 install: $(TARGET)
 	echo "installing into $(DESTDIR)..."
-	install -d $(DESTDIR)
 	install -d $(DESTDIR)/usr/bin
 	install desk-control $(DESTDIR)/usr/bin
 	install desk-control-speech.sh $(DESTDIR)/usr/bin
