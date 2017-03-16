@@ -67,7 +67,8 @@ ControlThread::ControlThread(std::string keyword):
 #endif
 	m_stop(false),
 	m_oldCommand(Command::stop),
-	m_logger()
+	m_logger(),
+	m_smallStep(false)
 {
 	std::transform(m_keyword.begin(), m_keyword.end(), m_keyword.begin(), ::tolower);
 	unique_lock<mutex> lck(m_cmdMutex);
@@ -182,6 +183,7 @@ ControlThread::cmd(std::string& cmd_line)
 					sleep(1);
 				}
 				delta = parseNumbers(is);
+				m_smallStep = (delta <= STOP_DELAY? true: false);
 				m_logger << "plus " << delta << " ..." << endl;
 				m_currentHeight = getHeight();
 				m_targetHeight = m_currentHeight + delta;
@@ -195,6 +197,7 @@ ControlThread::cmd(std::string& cmd_line)
 					sleep(1);
 				}
 				delta = parseNumbers(is);
+				m_smallStep = (delta <= STOP_DELAY? true: false);
 				m_logger << "minus " << delta << " ..." << endl;
 				m_currentHeight = getHeight();
 				m_targetHeight = m_currentHeight - delta;
@@ -312,12 +315,15 @@ ControlThread::run()
 		*/
 
 
+		unique_lock<mutex> lck(m_cmdMutex);
 		m_currentHeight = getHeight();
+		lck.unlock();
 		m_logger << "currentHeight=" << m_currentHeight << endl;
 
 
 		//cout << "target height = " << m_targetHeight << " currentHeight = " << m_currentHeight << endl;
-		if(m_targetHeight > (m_currentHeight-STOP_DELAY) && m_targetHeight <(m_currentHeight+STOP_DELAY)){
+		if(m_targetHeight >= (m_currentHeight-STOP_DELAY) && m_targetHeight <=(m_currentHeight+STOP_DELAY) 
+			&& !m_smallStep){
 			// stop
 			// TODO: how to stop?
 
@@ -325,16 +331,24 @@ ControlThread::run()
 			unique_lock<mutex> lck(m_cmdMutex);
 			while(!m_newCommand) m_cmdCondition.wait(lck);
 			lck.unlock();
-		} else if(m_targetHeight == (m_currentHeight + STOP_DELAY)){
+		} else if(m_targetHeight <= (m_currentHeight + STOP_DELAY) && m_targetHeight > m_currentHeight && m_smallStep){
 			m_logger << "small step up... " << endl;
-			for(int i = 0; i < 500; i++) move(Command::up);
+			int step = m_targetHeight - m_currentHeight;
+			for(int i = 0; i < (step*250); i++) move(Command::up);
+			unique_lock<mutex> lck(m_cmdMutex);
 			m_currentHeight = getHeight();
 			m_targetHeight = m_currentHeight;
-		} else if(m_targetHeight == (m_currentHeight - STOP_DELAY)){
+			m_smallStep = false;
+			lck.unlock();
+		} else if(m_targetHeight >= (m_currentHeight - STOP_DELAY) && m_targetHeight < m_currentHeight && m_smallStep){
 			m_logger << "small step down... " << endl;
-			for(int i = 0; i < 500; i++) move(Command::down);
+			int step =  m_currentHeight - m_targetHeight ;
+			for(int i = 0; i < (step*250); i++) move(Command::down);
+			unique_lock<mutex> lck(m_cmdMutex);
 			m_currentHeight = getHeight();
 			m_targetHeight = m_currentHeight;
+			m_smallStep = false;
+			lck.unlock();
 		} else if(m_currentHeight < m_targetHeight){
 			bool state = move(Command::up);
 			usleep(10000);

@@ -111,6 +111,7 @@ protected:
 	libusb_device_handle* m_udev;
 #endif
 	bool m_newCommand;
+	bool m_smallStep;
 	Command m_oldCommand;
 	//Command m_cmd;
 	bool m_stop;
