@@ -2,15 +2,16 @@
 
 grammar sample;
 
-public <basicCmd> = DESK ((<plus_minus> <number>) | <up_down> | <stop>) ;
+public <basicCmd> = HELENA ((<plus_minus> <number>) | <up_down> | <stop>) ;
+#public <basicCmd> = DESK ((<plus_minus> <number>) | <up_down> | <stop>) ;
 <plus_minus> = PLUS|MINUS;
 <up_down> = UP|DOWN;
 <stop> = STOP;
-<number> = ([<twens_plus>] <digit>) | <tens>;
+<number> = /10/<digit> |(/10/ <twens_plus> [/5/<digit>]) | /10/<tens>;
 
 <digit> = ( 
-		ONE
-	|	TWO
+	  ONE
+	| TWO
 	| THREE
 	| FOUR
 	| FIVE
@@ -21,20 +22,20 @@ public <basicCmd> = DESK ((<plus_minus> <number>) | <up_down> | <stop>) ;
 );
 
 <tens> = (
-	TEN		
-	| ELEVEN	
-	| TWELVE	
-	| THIRTEEN 
-	| FOURTEEN 
-	| FIFTEEN  
-	| SIXTEEN  
-	| SEVENTEEN
-	| EIGHTEEN 
-	| NINETEEN 
+	  /10/ TEN
+	| /4/ ELEVEN	
+	| /4/ TWELVE	
+	| /4/ THIRTEEN 
+	| /4/ FOURTEEN 
+	| /8/ FIFTEEN  
+	| /4/ SIXTEEN  
+	| /4/ SEVENTEEN
+	| /4/ EIGHTEEN 
+	| /4/ NINETEEN 
 );
 
 <twens_plus> = (
-		TWENTY
+	  TWENTY
 	| THIRTY
 	| FOURTY
 	| FIFTY
